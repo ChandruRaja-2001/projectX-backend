@@ -1,0 +1,15 @@
+services:
+  projectX:
+    build: 
+      context: .
+    ports:
+      - '9001:9001'
+    volumes:
+      - uploads:/usr/src/app/uploads
+      - logs:/usr/src/app/logs
+    env_file:
+      - .env
+      
+volumes:
+  uploads:
+  logs:

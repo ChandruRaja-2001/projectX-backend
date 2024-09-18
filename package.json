@@ -1,0 +1,51 @@
+{
+  "name": "ProjectX",
+  "version": "0.1.0",
+  "main": "server.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=\"--import=./register.js\" nodemon",
+    "start": "node ./dist/server.js",
+    "build": "tsc",
+    "build:test": "tsc && npm run postbuild && vitest run --config ./dist/vitest.config.js",
+    "postbuild": "node ./tools/copyStaticFiles.js",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/formidable": "^3.4.5",
+    "@types/uuid": "^10.0.0",
+    "argon2": "^0.41.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "formidable": "^3.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0",
+    "sharp": "^0.33.5",
+    "typescript": "^5.5.4",
+    "uuid": "^10.0.0",
+    "winston": "^3.14.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.5.2",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^2.0.5",
+    "fs-extra": "^11.2.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^2.0.5"
+  }
+}

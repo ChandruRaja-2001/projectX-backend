@@ -1,0 +1,68 @@
+name: CD
+
+on:
+  push:
+    branches: ["production"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy the container to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_SKJ_HOST }}
+          username: ${{ secrets.VPS_SKJ_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Authenticate git with SSH
+            eval "$(ssh-agent -s)"
+            ssh-add /home/docker/sshcicdkey
+            chmod 600 /home/docker/sshcicdkey
+
+            # Make sure .ssh directory exists
+            mkdir -p ~/.ssh
+            if [ ! -f ~/.ssh/known_hosts ]; then
+              ssh-keyscan github.com >> ~/.ssh/known_hosts
+            fi            
+
+            # Set global domain for Git repo
+            git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+            # Navigate to the project directory, create if necessary
+            MAIN_DIR="/opt/app"
+            PROJECT_DIR=$MAIN_DIR/projectX
+            BACKEND_DIR="$PROJECT_DIR/backend"
+
+            mkdir -p $PROJECT_DIR
+            if [ -d $BACKEND_DIR ]; then
+              cd $BACKEND_DIR
+              docker-compose down
+              docker image prune -a -f
+            else
+              mkdir -p $BACKEND_DIR
+              cd $BACKEND_DIR
+            fi
+
+            # Remove old code and clone fresh code from GitHub
+            cd $MAIN_DIR
+            rm -rf projectX
+            mkdir projectX
+            cd projectX
+            git clone git@github.com:YurikTechDev/lya-properties-backend-expressjs.git ./backend
+
+            # Set environment variables for Docker
+            cd backend
+            cat <<EOF > .env
+            COMPOSE_PROJECT_NAME=projectX
+            PORT=${{ secrets.APP_PORT }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASS=${{ secrets.DB_PASS }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            EOF
+            chmod 600 .env
+
+            # Run the container
+            docker compose up --build -d

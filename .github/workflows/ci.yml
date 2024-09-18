@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test@1997
+          MYSQL_DATABASE: projectX
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpass
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping --silent" --health-interval=5s --health-timeout=10s
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USER: testuser
+      DB_PASS: testpass
+      DB_NAME: projectX
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "21.7.3"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysql -h 127.0.0.1 -u testuser -ptestpass -e 'SELECT 1;' > /dev/null 2>&1; then
+              echo "MySQL is up and running!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: Set up database schema
+        run: |
+          for schema in ./schemas/*.sql; do
+            echo "Applying schema file: $schema"
+            mysql -h 127.0.0.1 -u testuser -ptestpass projectX < "$schema"
+          done
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Notify on test failure
+        if: failure()
+        run: echo "Tests failed! Please check and fix the errors."

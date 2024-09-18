@@ -1,0 +1,1 @@
+This is the main repository of the product LYA Properties. Run "npm install" and then rename ".example.env" file to ".env". Update it's values as per the keys to run the app.
